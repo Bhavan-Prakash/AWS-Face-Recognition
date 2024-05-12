@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition</title>
+</head>
+<body>
+    <h1>Take a Photo</h1>
+    <div>
+        <video id="video" width="400" height="300" autoplay></video>
+    </div>
+    <button id="captureButton">Capture</button>
+
+    <div id="imagePreview"></div>
+
+    <script>
+        // Function to initialize the webcam
+        function initializeWebcam() {
+            const video = document.getElementById('video');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('Error accessing webcam:', error);
+                });
+        }
+
+        // Function to capture photo from webcam
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imgData = canvas.toDataURL('image/jpeg').split(',')[1]; // Extracting base64 data
+
+            // Display captured image preview
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.innerHTML = '';
+
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/jpeg');
+            img.style.maxWidth = '300px';
+            img.style.maxHeight = '300px';
+            imagePreview.appendChild(img);
+
+            // Sending data to Flask endpoint
+fetch('/upload', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        body: {
+            imgData: imgData
+        }
+    })
+})
+.then(response => response.json())
+.then(data => {
+    // Handle response from Flask server
+    console.log(data);
+    alert(data.message);
+})
+.catch(error => console.error('Error:', error));
+
+        }
+        // Initialize webcam when the page loads
+        window.addEventListener('load', initializeWebcam);
+
+        // Add event listener to the capture button
+        document.getElementById('captureButton').addEventListener('click', capturePhoto);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Image Upload</title>
+// </head>
+// <body>
+//     <h1>Image Upload</h1>
+//     <div>
+//         <video id="video" width="640" height="480" autoplay></video>
+//         <button id="snap">Snap Photo</button>
+//     </div>
+//     <div>
+//         <canvas id="canvas" width="640" height="480"></canvas>
+//     </div>
+//     <div>
+//         <button id="upload">Upload</button>
+//         <div id="response"></div>
+//     </div>
+
+//     <script> 
+//         const video = document.getElementById('video');
+//         const canvas = document.getElementById('canvas');
+//         const snapBtn = document.getElementById('snap');
+//         const uploadBtn = document.getElementById('upload');
+//         const responseDiv = document.getElementById('response');
+//         const constraints = {
+//             video: true
+//         };
+
+//         // Access the device camera and stream to video element
+//         async function initCamera() {
+//             try {
+//                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
+//                 video.srcObject = stream;
+//             } catch (err) {
+//                 console.error('Error accessing the camera:', err);
+//             }
+//         }
+
+//         // Capture a photo from the video stream
+//         function captureImage() {
+//             const context = canvas.getContext('2d');
+//             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+//             return canvas.toDataURL('image/jpeg');
+//         }
+
+//         // Check the availability of the captured image in the S3 bucket
+//         async function checkImageAvailability(base64Image) {
+//             try {
+//                 const response = await fetch('/upload', {
+//                     method: 'POST',
+//                     headers: {
+//                         'Content-Type': 'application/json'
+//                     },
+//                     body: JSON.stringify({ image: base64Image })
+//                 });
+//                 const data = await response.json();
+//                 if (data.match_found) {
+//                     responseDiv.textContent = 'Match found';
+//                 } else {
+//                     responseDiv.textContent = 'Not found';
+//                 }
+//             } catch (err) {
+//                 console.error('Error checking image availability:', err);
+//             }
+//         }
+
+//         // Event listener for snap button
+//         snapBtn.addEventListener('click', () => {
+//             const base64Image = captureImage();
+//             checkImageAvailability(base64Image);
+//         });
+
+//         // Event listener for upload button
+//         uploadBtn.addEventListener('click', () => {
+//             const base64Image = captureImage();
+//             checkImageAvailability(base64Image);
+//         });
+
+//         // Initialize the camera
+//         initCamera();
+//     </script>
+// </body>
+// </html> -->
+
+
+
+
+
+
+
+
+
+
+
+// <!-- <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>Image Upload</title>
+// </head>
+// <body>
+//     <h1>Image Upload</h1>
+//     <div>
+//         <video id="video" width="640" height="480" autoplay></video>
+//         <button id="snap">Snap Photo</button>
+//     </div>
+//     <div>
+//         <canvas id="canvas" width="640" height="480"></canvas>
+//     </div>
+//     <div>
+//         <button id="upload">Upload</button>
+//         <div id="response"></div>
+//     </div>
+
+//     <script>
+//         const video = document.getElementById('video');
+//         const canvas = document.getElementById('canvas');
+//         const snapBtn = document.getElementById('snap');
+//         const uploadBtn = document.getElementById('upload');
+//         const responseDiv = document.getElementById('response');
+//         const constraints = {
+//             video: true
+//         };
+
+//         // Access the device camera and stream to video element
+//         async function initCamera() {
+//             try {
+//                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
+//                 video.srcObject = stream;
+//             } catch (err) {
+//                 console.error('Error accessing the camera:', err);
+//             }
+//         }
+
+//         // Capture a photo from the video stream
+//         function captureImage() {
+//             const context = canvas.getContext('2d');
+//             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+//             return canvas.toDataURL('image/jpeg');
+//         }
+
+//         // Check the availability of the captured image in the S3 bucket
+//         async function checkImageAvailability(base64Image) {
+//             try {
+//                 const response = await fetch('/upload', {
+//                     method: 'POST',
+//                     headers: {
+//                         'Content-Type': 'application/json'
+//                     },
+//                     body: JSON.stringify({ image: base64Image })
+//                 });
+//                 const data = await response.json();
+//                 responseDiv.innerHTML = JSON.stringify(data);
+//             } catch (err) {
+//                 console.error('Error checking image availability:', err);
+//             }
+//         }
+
+//         // Event listener for snap button
+//         snapBtn.addEventListener('click', () => {
+//             const base64Image = captureImage();
+//             checkImageAvailability(base64Image);
+//         });
+
+//         // Event listener for upload button
+//         uploadBtn.addEventListener('click', () => {
+//             const base64Image = captureImage();
+//             checkImageAvailability(base64Image);
+//         });
+
+//         // Initialize the camera
+//         initCamera();
+//     </script>
+// </body>
+// </html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// <!-- <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>Webcam Image Capture</title>
+// </head>
+// <body>
+//     <h1>Webcam Image Capture</h1>
+//     <video id="video" width="640" height="480" autoplay></video><br>
+//     <button id="capture-btn">Capture Image</button>
+//     <div id="result"></div>
+
+//     <script>
+//         const video = document.getElementById('video');
+//         const captureButton = document.getElementById('capture-btn');
+//         const resultDiv = document.getElementById('result');
+
+//         // Get user media (webcam)
+//         navigator.mediaDevices.getUserMedia({ video: true })
+//             .then(stream => {
+//                 video.srcObject = stream;
+//             })
+//             .catch(err => {
+//                 console.error('Error accessing webcam:', err);
+//             });
+
+//         // Function to capture image from webcam
+//         function captureImage() {
+//             const canvas = document.createElement('canvas');
+//             const context = canvas.getContext('2d');
+//             canvas.width = video.videoWidth;
+//             canvas.height = video.videoHeight;
+//             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+//             return canvas.toDataURL('image/jpeg');
+//         }
+
+//         // Capture image from webcam and send it to the backend
+//         captureButton.addEventListener('click', () => {
+//             const imgData = captureImage();
+
+//             // Check if image data is available
+//             if (imgData) {
+//                 // Send image data to the backend
+//                 fetch('/upload', {
+//                     method: 'POST',
+//                     headers: {
+//                         'Content-Type': 'application/json'
+//                     },
+//                     body: JSON.stringify({ body: { imgData: imgData } })
+//                 })
+//                 .then(response => response.json())
+//                 .then(data => {
+//                     console.log('Result from backend:', data);
+//                     // Display the result on the web page
+//                     if (data.match_found) {
+//                         resultDiv.textContent = 'Match found';
+//                     } else {
+//                         resultDiv.textContent = 'No match found';
+//                     }
+//                 })
+//                 .catch(error => {
+//                     console.error('Error sending image data:', error);
+//                 });
+//             } else {
+//                 console.error('Failed to capture image.');
+//             }
+//         });
+//     </script>
+// </body>
+// </html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// <!-- ishav bhai code -->
+//     <!-- <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>Image Upload</title>
+// </head>
+// <body>
+//     <h1>Image Upload</h1>
+//     <div>
+//         <video id="video" width="640" height="480" autoplay></video>
+//         <button id="snap">Snap Photo</button>
+//     </div>
+//     <div>
+//         <canvas id="canvas" width="640" height="480"></canvas>
+//     </div>
+//     <div>
+//         <button id="upload">Upload</button>
+//         <div id="response"></div>
+//     </div>
+
+//     <script>
+//         const video = document.getElementById('video');
+//         const canvas = document.getElementById('canvas');
+//         const snapBtn = document.getElementById('snap');
+//         const uploadBtn = document.getElementById('upload');
+//         const responseDiv = document.getElementById('response');
+//         const constraints = {
+//             video: true
+//         };
+
+//         // Access the device camera and stream to video element
+//         async function initCamera() {
+//             try {
+//                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
+//                 video.srcObject = stream;
+//             } catch (err) {
+//                 console.error('Error accessing the camera:', err);
+//             }
+//         }
+
+//         // Capture a photo from the video stream
+//         function captureImage() {
+//             const context = canvas.getContext('2d');
+//             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+//             return canvas.toDataURL('image/jpeg');
+//         }
+
+//         // Upload the captured image
+//         async function uploadImage() {
+//             const base64Image = captureImage();
+
+//             const formData = new FormData();
+//             formData.append('image', base64Image);
+
+//             try {
+//                 const response = await fetch('/upload', {
+//                     method: 'POST',
+//                     body: formData
+//                 });
+//                 const data = await response.json();
+//                 responseDiv.innerHTML = JSON.stringify(data);
+//             } catch (err) {
+//                 console.error('Error uploading image:', err);
+//             }
+//         }
+
+//         // Event listener for snap button
+//         snapBtn.addEventListener('click', () => {
+//             captureImage();
+//         });
+
+//         // Event listener for upload button
+//         uploadBtn.addEventListener('click', () => {
+//             uploadImage();
+//         });
+
+//         // Initialize the camera
+//         initCamera();
+//     </script>
+// </body>
+// </html>  -->
