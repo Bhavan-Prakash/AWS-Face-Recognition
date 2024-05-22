@@ -1,0 +1,53 @@
+//AWS lambda function code to add face to the s3 bucket as well as in collection
+
+
+const AWS = require('aws-sdk');
+const rekognition = new AWS.Rekognition();
+const s3 = new AWS.S3();
+
+exports.handler = async (event) => {
+    // output 
+    let response = {
+        "data": "",
+        "message": "",
+        "error": ""
+    };
+
+    try {
+        const { imgData, externalImageId, s3Bucket, collectionId } = event;
+
+        //base64 image to buffer
+        const decodedImage = Buffer.from(imgData, 'base64');
+
+        // s3 mei upload
+        const uploadParams = {
+            Bucket: s3Bucket,
+            Key: externalImageId, 
+            Body: decodedImage
+        };
+
+        await s3.upload(uploadParams).promise();
+
+        // collection mei upload
+        const indexParams = {
+            CollectionId: collectionId,
+            Image: {
+                S3Object: {
+                    Bucket: s3Bucket,
+                    Name: externalImageId
+                }
+            },
+            ExternalImageId: externalImageId
+        };
+
+        await rekognition.indexFaces(indexParams).promise();
+
+        response.message = "Image uploaded to S3 and added to Rekognition collection successfully!";
+        response.error = null;
+    } catch (e) {
+        response.message = "Failed to upload image to S3 and/or add to Rekognition collection!";
+        response.error = e.message;
+    }
+
+    return response;
+};
