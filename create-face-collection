@@ -1,0 +1,29 @@
+//AWS Lambda function code for creating face collection
+const AWS = require('aws-sdk');
+const rekognition = new AWS.Rekognition();
+exports.handler = async (event) => {
+    // output jo hame chahiye
+    let response = {
+        "data": "",
+        "message": "",
+        "error": ""
+    };
+    
+    // main code
+    try {
+        var params = {
+            "CollectionId": "faces-collection" //collection name hamesha yaad rakh
+        };
+         
+        const data = await rekognition.createCollection(params).promise();
+        
+        response.data = data;
+        response.message = "Collection Created Successfully";
+        response.error = null;
+    } catch (e) {
+        response.data = null;
+        response.message = "Collection Created Failed";
+        response.error = e;
+    }
+    return response;
+};
