@@ -1,0 +1,80 @@
+//AWS Lambda function code to search for the input image
+
+
+const AWS = require('aws-sdk');
+const rekognition = new AWS.Rekognition();
+const s3 = new AWS.S3();
+
+exports.handler = async (event) => {
+    // Output
+    const response = {
+        message: '',
+        //name: "",
+        externalImageId: ""
+    };
+
+    try {
+        // JSON input
+        const { imgData } = JSON.parse(event.body);
+
+        // check imgData hai ki nhi
+        if (!imgData) {
+            throw new Error("imgData is missing");
+        }
+
+        //base64 image to buffer
+        const decodedImage = Buffer.from(imgData, 'base64');
+
+        //s3 ki sari photos ko ek list mai dal convert karna
+        const s3Params = {
+            Bucket: "testing-bhavan",
+        };
+
+        const s3Objects = await s3.listObjectsV2(s3Params).promise();
+        const imageKeys = s3Objects.Contents.map(obj => obj.Key);
+
+        //sari image ko check karna ki search image available hai ki nhi
+        let matchFound = false;
+        for (const imageKey of imageKeys) {
+            const params = {
+                CollectionId: "faces-collection",
+                FaceMatchThreshold: 90,
+                Image: {
+                    Bytes: decodedImage
+                },
+                MaxFaces: 5
+            };
+
+            // Call Rekognition
+            const data = await rekognition.searchFacesByImage(params).promise();
+
+            if (data.FaceMatches.length > 0) {
+                matchFound = true;
+                response.message = "Face recognized successfully!!";
+                //response.name = imageKey;
+                response.externalImageId = data.FaceMatches[0].Face.ExternalImageId;
+                break;
+            }
+        }
+
+        if (!matchFound) {
+            response.message = "Face not recognized";
+        }
+    } catch (e) {
+        console.error('Lambda Function Error:', e);
+        response.message = "Face recognition failed";
+        response.error = e.message;
+    }
+
+    // Set CORS headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+    };
+
+    return {
+        statusCode: 200,
+        headers: headers,
+        body: JSON.stringify(response)
+    };
+};
