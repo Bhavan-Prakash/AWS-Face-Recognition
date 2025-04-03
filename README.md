@@ -36,11 +36,6 @@ This project is a real-time face recognition system leveraging AWS services such
    npm start
    ```
 
-## Project Screenshot
-
-
-
-> Replace `image-path.png` with the actual path of your uploaded image in the repository.
 
 ## Contributing
 
